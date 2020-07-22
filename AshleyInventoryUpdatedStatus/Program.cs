@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 using System.ServiceModel;
-
-
+using System.Xml.Linq;
+using Microsoft.JScript;
 
 namespace AshleyInventoryUpdatedStatus
 {
@@ -153,37 +153,37 @@ namespace AshleyInventoryUpdatedStatus
 
 
 
-            var nodeShipToList = xmlRequest.GetElementsByTagName("fnParty:partyIdentifier");
-            ////-----Updating first Item-----//
+            //var nodeShipToList = xmlRequest.GetElementsByTagName("fnParty:partyIdentifier");
+            //////-----Updating first Item-----//
 
-            var firstShipToNode = nodeShipToList[1];
+            //var firstShipToNode = nodeShipToList[1];
 
-            if (shipToLocation == "01")
-            {
+            //if (shipToLocation == "01")
+            //{
 
-                if (firstShipToNode.Attributes["partyIdentifierCode"].Value.Equals(""))//initial value from the XML template file
-                {
-                    //Update this item-Lvl1 when looking for its inventory
-                    firstShipToNode.Attributes["partyIdentifierCode"].LastChild.Value = "01";// shipToLocation.ToString();//"1050160";  //1080329: this value works fine!!  value = -1   6/26/2020  
+            //    if (firstShipToNode.Attributes["partyIdentifierCode"].Value.Equals(""))//initial value from the XML template file
+            //    {
+            //        //Update this item-Lvl1 when looking for its inventory
+            //        firstShipToNode.Attributes["partyIdentifierCode"].LastChild.Value = "01";// shipToLocation.ToString();//"1050160";  //1080329: this value works fine!!  value = -1   6/26/2020  
 
-                }
+            //    }
 
-            }
+            //}
 
 
-            if (shipToLocation == "02")
-            {
+            //if (shipToLocation == "02")
+            //{
 
-                // if (firstShipToNode.Attributes["partyIdentifierCode"].Value.Equals("01")  && firstShipToNode.Attributes["partyIdentifierCode"].Value.Equals(""))//initial value from the XML template file
+            //    // if (firstShipToNode.Attributes["partyIdentifierCode"].Value.Equals("01")  && firstShipToNode.Attributes["partyIdentifierCode"].Value.Equals(""))//initial value from the XML template file
 
-                if (firstShipToNode.Attributes["partyIdentifierCode"].Value.Equals(""))//initial value from the XML template file
-                {
-                    //Update this item-Lvl1 when looking for its inventory
-                    firstShipToNode.Attributes["partyIdentifierCode"].LastChild.Value = "02";// shipToLocation.ToString();//"1050160";  //1080329: this value works fine!!  value = -1   6/26/2020  
+            //    if (firstShipToNode.Attributes["partyIdentifierCode"].Value.Equals(""))//initial value from the XML template file
+            //    {
+            //        //Update this item-Lvl1 when looking for its inventory
+            //        firstShipToNode.Attributes["partyIdentifierCode"].LastChild.Value = "02";// shipToLocation.ToString();//"1050160";  //1080329: this value works fine!!  value = -1   6/26/2020  
 
-                }
+            //    }
 
-            }
+            //}
 
 
 
@@ -353,19 +353,19 @@ namespace AshleyInventoryUpdatedStatus
                 //if (k == 2)
                 //    shipToNumber = "02";
 
-                //  var xmlRequestModified = UpdateCustomerData(sku, shipToNumber);
-
-                var xmlRequestModified = UpdateCustomerData(xmlRequest, sku, shipToNumber);
-
-                // var listOfModifiedXmlRequest = updateCustomerNumber(xmlRequest);
 
 
+                ////   var xmlRequestModified = UpdateCustomerData(xmlRequest, sku, shipToNumber);  //this works but it uses so much memories
 
                 //Get the OuterXml from the modified xmlRequest
-                var sXMLRequest = xmlRequestModified.OuterXml;
+                ///  var sXMLRequest = xmlRequestModified.OuterXml;
+                ///  
+
+
+
 
                 //Get the OuterXml from the document             
-                // var sXMLRequest = xmlRequest.OuterXml;
+                var sXMLRequest = xmlRequest.OuterXml;
 
 
 
@@ -472,7 +472,7 @@ namespace AshleyInventoryUpdatedStatus
 
 
                     //Path to store the XML files that are generated
-                    string GeneratedPath = @"C:\Users\cboulingui\source\repos\AshleyInventoryLookUp\XMLGenerated\" + sku + "_" + shipToNumber + ".xml";
+                    string GeneratedPath = @"C:\Users\cboulingui\source\repos\AshleyInventoryLookUp\XMLGenerated\" + sku + "_" + shipToNumber+ DateTime.Now.Ticks.ToString() + ".xml";
 
                     xElem.Save(GeneratedPath);
 
@@ -482,7 +482,6 @@ namespace AshleyInventoryUpdatedStatus
                 }
 
                 //  }  //end for loop
-
 
 
 
@@ -859,6 +858,71 @@ namespace AshleyInventoryUpdatedStatus
 
 
 
+        public static XDocument CreateXMLRequest(string customerNumber, string shipToNumber, string sku)
+        {
+            // Get the current date.
+            DateTime thisDate = DateTime.Now;
+            string todaysDate = thisDate.ToString("yyyy-MM-dd");
+
+            Stopwatch sw = Stopwatch.StartNew();
+            string creationTime = sw.ToString();
+
+            int QuantityBuffer = 0;
+
+            string currentCustNumber = customerNumber;
+
+
+
+            XNamespace fniia = "http://xml.fidx.org/xml/schemas/fidxInvInqAdv_v1.3";
+            XNamespace fnBase = "http://support.furnishnet.com/xml/schemas/fnBase_v1.5";
+            XNamespace fnItem = "http://support.furnishnet.com/xml/schemas/fnItem_v1.5";
+            XNamespace fnParty = "http://support.furnishnet.com/xml/schemas/fnParty_v1.4";
+            XNamespace xsi = "http://www.w3.org/2001/XMLSchema-instance";
+            XNamespace schemaLocation = "http://xml.FIDX.org/xml/schemas/fidxInvInqAdv_v1.3 http://xml.ashleyfurniture.com/XML/Schemas/fidx_InventoryInqAdv_v1.3.xsd";
+
+
+            //XElement root = new XElement(fniia + "inventoryInqAdv",
+            XDocument InquiryDocument = new XDocument(
+            new XDeclaration("1.0", "UTF-8", null),
+            new XElement(fniia + "inventoryInqAdv",
+            new XAttribute(XNamespace.Xmlns + "fniia", "http://xml.fidx.org/xml/schemas/fidxInvInqAdv_v1.3"),
+            new XAttribute(XNamespace.Xmlns + "fnBase", "http://support.furnishnet.com/xml/schemas/fnBase_v1.5"),
+            new XAttribute(XNamespace.Xmlns + "fnItem", "http://support.furnishnet.com/xml/schemas/fnItem_v1.5"),
+            new XAttribute(XNamespace.Xmlns + "fnParty", "http://support.furnishnet.com/xml/schemas/fnParty_v1.4"),
+            new XAttribute(XNamespace.Xmlns + "xsi", "http://www.w3.org/2001/XMLSchema-instance"),
+            new XAttribute(xsi + "schemaLocation", "http://xml.FIDX.org/xml/schemas/fidxInvInqAdv_v1.3 http://xml.ashleyfurniture.com/XML/Schemas/fidx_InventoryInqAdv_v1.3.xsd"),
+                new XElement("Inquiry",
+                    new XElement("document", new XAttribute("id", "myRequest_0123"), new XAttribute("type", "InventoryStatus"), new XAttribute("purpose", "inquiry"),
+                        new XElement("creationDate", "2020-07-21"), new XElement("creationTime", "10:25:31")),
+                    new XElement("potentialBuyer",
+                        new XElement(fnParty + "partyIdentifier", new XAttribute("partyIdentifierCode", "967600"), new XAttribute("partyIdentifierQualifierCode", "SenderAssigned"))), 
+                    new XElement("potentialShipTo",
+                        new XElement(fnParty + "partyIdentifier", new XAttribute("partyIdentifierCode", "02"), new XAttribute("partyIdentifierQualifierCode", "SenderAssigned"))), 
+                    new XElement("potentialSeller",
+                        new XElement(fnParty + "partyIdentifier", new XAttribute("partyIdentifierCode", "052738531"), new XAttribute("partyIdentifierQualifierCode", "DUNS"))), 
+                    new XElement("inquirySystemReference",
+                        new XElement("systemReferenceDescription", "QuantityBuffer"), new XElement("systemReferenceValue", 10))), 
+                new XElement("Items",
+                    new XElement("itemInquiry", new XAttribute("lineItemNumber", "1"), new XAttribute("responseType", "CurrentQuantity"),
+                        new XElement("itemId",
+                            new XElement("itemIdentifier", new XAttribute("itemNumber", sku), new XAttribute("itemNumberQualifier", "SellerAssigned"))),
+                        new XElement("itemQty", new XAttribute("unitOfMeasure", "Each"), new XAttribute("value", "4"))))));
+            
+            //  Console.WriteLine(InquiryDocument);  //displaying the entiere XML document
+
+            string fileName = @"C:\AshleyTest\AshleyInquiryFileTest_02" + ".xml";
+
+
+            InquiryDocument.Save(fileName);
+            //  InquiryDocument.Save(fileName, SaveOptions.DisableFormatting);
+
+            return InquiryDocument;
+
+        }
+
+
+
+
         static async Task Main(string[] args)
         {
 
@@ -871,6 +935,11 @@ namespace AshleyInventoryUpdatedStatus
             //**************End initiating stopwatch ***********************//
 
 
+
+
+
+
+
             string pathToXLFileWithListOfCustomerNumbers = @"C:\Users\cboulingui\source\repos\ExtractAshleyFeed\CustomerNumbers\AshleyAllCustomerNumbers.xlsx";
             List<string> listOfAllCustomerNumbers = readXLSThatContainsAllAshleyMembers(pathToXLFileWithListOfCustomerNumbers);
 
@@ -879,6 +948,8 @@ namespace AshleyInventoryUpdatedStatus
 
 
             string customerNumber = "967600"; //;"3416700";
+
+
 
             // string customerNumber = "";
 
@@ -945,6 +1016,10 @@ namespace AshleyInventoryUpdatedStatus
 
             string shipToNumberTwo = "02";
 
+
+
+
+
             //await Task.Run(() => GenerateXMLFiles(listOfSkusOfCurrentCustomer, shipToNumberEmpty));
 
             //await Task.Run(() => GenerateXMLFiles(listOfSkusOfCurrentCustomer, shipToNumberOne));
@@ -955,7 +1030,16 @@ namespace AshleyInventoryUpdatedStatus
             // foreach (var sku in listOfSkusOfCurrentCustomer.Take(1))
             // {
 
-            var sku = "A8010025";
+            var sku = "1090112";
+
+
+
+
+            //  XDocument xmlRequestInquiryOne = CreateXMLRequest(customerNumber, shipToNumberOne, sku);
+
+            XDocument xmlRequestInquiryTwo = CreateXMLRequest(customerNumber, shipToNumberTwo, sku);
+
+            Console.WriteLine();
 
             //var xmlRequestEmpty = new System.Xml.XmlDocument();
 
@@ -963,11 +1047,201 @@ namespace AshleyInventoryUpdatedStatus
 
             //var xmlRequestTwo = new System.Xml.XmlDocument();
 
-            xmlRequestEmpty.Load(@"C:\Users\cboulingui\Desktop\Ashley_Response_For_Inventory\AshleyInventoryInquiryTemplateEmpty.xml");
+            //xmlRequestEmpty.Load(@"C:\Users\cboulingui\Desktop\Ashley_Response_For_Inventory\AshleyInventoryInquiryTemplateEmpty.xml");
 
-            xmlRequestOne.Load(@"C:\Users\cboulingui\Desktop\Ashley_Response_For_Inventory\AshleyInventoryInquiryTemplateOne.xml");
+            //xmlRequestOne.Load(@"C:\Users\cboulingui\Desktop\Ashley_Response_For_Inventory\AshleyInventoryInquiryTemplateOne.xml");
 
-            xmlRequestTwo.Load(@"C:\Users\cboulingui\Desktop\Ashley_Response_For_Inventory\AshleyInventoryInquiryTemplateTwo.xml");
+            //  xmlRequestTwo.Load(@"C:\Users\cboulingui\Desktop\Ashley_Response_For_Inventory\AshleyInventoryInquiryTemplateTwo.xml");
+
+
+
+
+
+
+
+
+
+
+            //-----------------------------------------------------------------------------------
+            //  XmlDocument doc = new XmlDocument();
+            //xmlRequestTwo.LoadXml("<?xml version='1.0' encoding='UTF-8'?>" +
+            //            "<fniia:inventoryInqAdv xmlns:fniia='http://xml.FIDX.org/xml/schemas/fidxInvInqAdv_v1.3' xmlns:fnBase='http://support.furnishnet.com/xml/schemas/fnBase_v1.5' xmlns:fnItem='http://support.furnishnet.com/xml/schemas/fnItem_v1.5' xmlns:fnParty='http://support.furnishnet.com/xml/schemas/fnParty_v1.4' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://xml.FIDX.org/xml/schemas/fidxInvInqAdv_v1.3 http://xml.ashleyfurniture.com/XML/Schemas/fidx_InventoryInqAdv_v1.3.xsd>'" +
+            //                "<inquiry>" +
+            //                    "<document id='myRequest_0123' type='InventoryStatus' purpose='inquiry'>" +
+            //                        "<creationDate>'2006-07-28'</creationDate>" +
+            //                        "<creationTime>'10:25:31'</creationTime>" +
+            //                    "</document>" +
+            //                    "<potentialBuyer>" +
+            //                        "<fnParty:partyIdentifier partyIdentifierCode='967600' partyIdentifierQualifierCode='SenderAssigned'/>" +
+            //                    "</potentialBuyer>" +
+            //                    "<potentialShipTo>" +
+            //                        "<fnParty:partyIdentifier partyIdentifierCode='' partyIdentifierQualifierCode='SenderAssigned'/>" +
+            //                    "</potentialShipTo>" +
+            //                    "<potentialSeller>" +
+            //                        "<fnParty:partyIdentifier partyIdentifierCode='052738531' partyIdentifierQualifierCode='DUNS'/>" +
+            //                    "</potentialSeller>" +
+            //                    "<inquirySystemReference>" +
+            //                        "<systemReferenceDescription>'QuantityBuffer'</systemReferenceDescription>" +
+            //                        "<systemReferenceValue>'10'</systemReferenceValue>" +
+            //                    "</inquirySystemReference>" +
+            //                "</inquiry>" +
+            //                "<items>" +
+            //                    "<itemInquiry lineItemNumber='1' responseType='CurrentQuantity'>" +
+            //                        "<itemId>" +
+            //                            "<itemIdentifier itemNumber=" + sku + " itemNumberQualifier='SellerAssigned'/>" +
+            //                        "</itemId>" +
+            //                        "<itemQty unitOfMeasure='Each' value='4'/>" +
+            //                    "</itemInquiry>" +
+            //                    "<itemInquiry lineItemNumber='1' responseType='CurrentQuantity'>" +
+            //                        "<itemId>" +
+            //                            "<itemIdentifier itemNumber='A8010025' itemNumberQualifier='SellerAssigned'/>" +
+            //                        "</itemId>" +
+            //                        "<itemQty unitOfMeasure='Each' value='4'/>" +
+            //                    "</itemInquiry>" +
+            //                "</items>" +
+            //            "</fniia:inventoryInqAdv>"
+
+            //    );
+
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml("<?xml version=\"1.0\" encoding=\"UTF-8\" ?> \n" +
+    "<fniia:inventoryInqAdv xmlns:fniia=\"http://xml.FIDX.org/xml/schemas/fidxInvInqAdv_v1.3\"  xmlns:fnBase=\"http://support.furnishnet.com/xml/schemas/fnBase_v1.5\"  xmlns:fnItem=\"http://support.furnishnet.com/xml/schemas/fnItem_v1.5\" xmlns:fnParty=\"http://support.furnishnet.com/xml/schemas/fnParty_v1.4\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://xml.FIDX.org/xml/schemas/fidxInvInqAdv_v1.3  http://xml.ashleyfurniture.com/XML/Schemas/fidx_InventoryInqAdv_v1.3.xsd>\"> \n" +
+                    //"  <book genre=\"novel\" ISBN=\"1-861001-57-8\" publicationdate=\"1823-01-28\"> \n" +
+                    //"    <title>Pride And Prejudice</title> \n" +
+                    //"    <price>24.95</price> \n" +
+                    //"  </book> \n" +
+                    //"  <book genre=\"novel\" ISBN=\"1-861002-30-1\" publicationdate=\"1985-01-01\"> \n" +
+                    //"    <title>The Handmaid's Tale</title> \n" +
+                    //"    <price>29.95</price> \n" +
+                    //"  </book> \n" +
+
+
+
+
+
+
+                    "<inquiry>" +
+     " <document id = \"myRequest_0123\" type = \"InventoryStatus\" purpose = \"inquiry\">" +
+      "   <creationDate>2006-07-28</creationDate> " +
+     "    <creationTime>10:25:31</creationTime> " +
+     " </document> " +
+    "  <potentialBuyer> " +
+      //  < !--COMMENT: This is Ashley's ID for the customer sending the request. This needs to be changed to be a valid Request -->
+      "   <fnParty:partyIdentifier partyIdentifierCode = \"967600\" partyIdentifierQualifierCode = \"SenderAssigned\"/> " +
+    "  </potentialBuyer>" +
+     " <potentialShipTo>" +
+       //  "   < !--COMMENT: This is Ashley's ID for the customer ship-to location (or store). This needs to be changed to be a valid Request -->
+       "  <fnParty:partyIdentifier partyIdentifierCode = \"\" partyIdentifierQualifierCode =\"SenderAssigned\"/>" +
+     " </potentialShipTo>" +
+      "<potentialSeller>" +
+        // "  < !--COMMENT: This is Ashley's DUNS ID and should not be changed. -->
+        " <fnParty:partyIdentifier partyIdentifierCode = \"052738531\" partyIdentifierQualifierCode = \"DUNS\"/>" +
+      "</potentialSeller>" +
+      "<inquirySystemReference>" +
+        //  "  < !--COMMENT: QuantityBuffer represents an margin of safety that the requester would like used when determining First Available Date.It is added to the item quantity(below).The inquirySystemReference node is optional.If it is omitted, QuantityBuffer will be defaulted to 0(zero).-- >
+        " <systemReferenceDescription>QuantityBuffer</systemReferenceDescription> " +
+         "<systemReferenceValue>10</systemReferenceValue> " +
+     " </inquirySystemReference>" +
+   "</inquiry> " +
+   "<items>" +
+    "  <itemInquiry lineItemNumber = \"1\" responseType = \"CurrentQuantity\"> " +
+     "    <itemId> " +
+      "      <itemIdentifier itemNumber = \"A8010025\" itemNumberQualifier = \"SellerAssigned\"/> " +
+       "  </itemId> " +
+        " <itemQty unitOfMeasure = \"Each\" value = \"4\"/> " +
+      "</itemInquiry>" +
+
+      "<itemInquiry lineItemNumber = \"1\" responseType = \"CurrentQuantity\">" +
+       "  <itemId>" +
+        "    <itemIdentifier itemNumber = \"1050160\" itemNumberQualifier = \"SellerAssigned\"/> " +
+         "</itemId>" +
+        " <itemQty unitOfMeasure = \"Each\" value = \"4\"/>" +
+    "  </itemInquiry>" +
+
+  " </items>" +
+    "</fniia:inventoryInqAdv>");
+            //-----------------------------------------------------------------------------------
+
+
+
+            var nodeShipToList = doc.GetElementsByTagName("fnParty:partyIdentifier");
+            ////-----Updating first Item-----//
+
+            var firstShipToNode = nodeShipToList[1];
+
+            //  if (shipToNumberTwo == "02")
+            //  {
+
+            if (firstShipToNode.Attributes["partyIdentifierCode"].Value.Equals(""))//initial value from the XML template file
+            {
+                //Update this item-Lvl1 when looking for its inventory
+                firstShipToNode.Attributes["partyIdentifierCode"].LastChild.Value = shipToNumberTwo;// shipToLocation.ToString();//"1050160";  //1080329: this value works fine!!  value = -1   6/26/2020  
+
+            }
+
+            // }
+
+
+
+
+
+
+
+
+
+
+
+            foreach (XmlNode node in doc.SelectNodes("//@itemNumber"))
+            {
+                node.Value = sku;
+            }
+
+
+
+            string fileName = @"C:\AshleyTest\AshleyInquiryFile" + shipToNumberTwo + ".xml";
+
+            doc.Save(fileName);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            //   xmlRequestOne.LoadXml(xmlRequestInquiryOne.ToString());
+
+            xmlRequestTwo.Load(@"C:\AshleyTest\AshleyInquiryFileTest_02.xml");
+
+            xmlRequestOne.Load(@"C:\AshleyTest\AshleyInventoryInquiryTemplateTwo.xml");
+
+
+            //xmlRequestOne.Load(@"C:\AshleyTest\AshleyInquiryFile01.xml");
+
+            //xmlRequestTwo.Load(@"C:\AshleyTest\AshleyInquiryFile02.xml");
+
 
 
             //Task t1 = Task.Run(() => GenerateXMLFiles(xmlRequestEmpty, listOfSkusOfCurrentCustomer, shipToNumberEmpty));
@@ -975,19 +1249,20 @@ namespace AshleyInventoryUpdatedStatus
             //Task t3 = Task.Run(() => GenerateXMLFiles(xmlRequestTwo, listOfSkusOfCurrentCustomer, shipToNumberTwo));
 
 
-            Task t1 = Task.Run(() => GenerateXMLFiles(xmlRequestEmpty, sku, shipToNumberEmpty));
-            Task t2 = Task.Run(() => GenerateXMLFiles(xmlRequestOne, sku, shipToNumberOne));
-            Task t3 = Task.Run(() => GenerateXMLFiles(xmlRequestTwo, sku, shipToNumberTwo));
+            //  Task t0 = Task.Run(() => GenerateXMLFiles(xmlRequestEmpty, sku, shipToNumberEmpty));
+              Task t1 = Task.Run(() => GenerateXMLFiles(xmlRequestOne, sku, shipToNumberOne));
+            Task t2 = Task.Run(() => GenerateXMLFiles(xmlRequestTwo, sku, shipToNumberTwo));
 
 
 
+            await Task.WhenAll(t1, t2);
+            
+
+            //  await Task.WhenAll(t0, t1, t2);
 
 
-            await Task.WhenAll(t1, t2, t3);
-            // }
 
-
-            ReadXMLFiles();
+            ///  ReadXMLFiles();
 
 
             Console.WriteLine();
